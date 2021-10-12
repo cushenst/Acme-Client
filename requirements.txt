@@ -1,1 +1,2 @@
 Flask~=2.0.1
+cryptography~=35.0.0
