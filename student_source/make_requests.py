@@ -2,12 +2,12 @@ import requests
 
 
 def get_urls(url):
-    print(f"get to: {url}")
+    print(f"GET : {url}")
     return requests.get(url, verify=False)
 
 
 def post_data(url, data):
-    print(f"post to: {url}")
+    print(f"POST to: {url}")
     create_account_request = requests.post(url, headers={"Content-Type": "application/jose+json"},
                                            data=data, verify=False)
 
@@ -15,5 +15,10 @@ def post_data(url, data):
 
 
 def get_nonce(url):
-    print("get Nonce")
+    print("GET Nonce")
     return requests.head(url, verify=False)
+
+
+def get_http(url):
+    print(f"GET {url}")
+    return requests.get(url, verify=False)

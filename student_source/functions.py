@@ -1,7 +1,8 @@
-from student_source.generate_key import sign_jws_rsa
-import student_source.make_requests as http_requests
 import json
+
 import student_source.constants as constants
+import student_source.make_requests as http_requests
+from student_source.generate_key import sign_jws_rsa
 
 
 def create_account(key, urls):
@@ -40,10 +41,10 @@ def list_orders(key, kid, orders_url):
     print(list_orders_response_body)
 
 
-def create_order(challenge_type, domains, auth, urls, key):
+def create_order(domains, auth, urls, key):
     identifiers = []
     for domain in domains:
-        identifiers.append({"type": challenge_type, "value": domain})
+        identifiers.append({"type": "dns", "value": domain})
     payload = json.dumps({
         "identifiers": identifiers
     })
@@ -52,5 +53,39 @@ def create_order(challenge_type, domains, auth, urls, key):
     nonce = get_nonce(urls)
     signed_payload = sign_jws_rsa(key, nonce, url, payload, auth)
     response_header, response_body = http_requests.post_data(url, signed_payload)
-    print(response_body)
-    return response_body
+    return json.loads(response_body)
+
+
+def get_challenges(auth_url, urls, kid, key, challenge_type):
+    nonce = get_nonce(urls)
+    signed_payload = sign_jws_rsa(key, nonce, auth_url, "", kid)
+    header, body = http_requests.post_data(auth_url, signed_payload)
+    body = json.loads(body)
+    challenges = body["challenges"]
+    for challenge in challenges:
+        if challenge_type in challenge["type"]:
+            return {"url": challenge["url"], "token": challenge["token"], "status": challenge["status"],
+                    "domain": body["identifier"]["value"]}
+    return {"status": "Not Found"}
+
+
+def check_http_server(url, token):
+    response = http_requests.get_http(url)
+    decoded_body = response.content.decode()
+    print(decoded_body)
+
+
+def send_challenge_validation_request(urls, url, key, kid):
+    nonce = get_nonce(urls)
+    signed_payload = sign_jws_rsa(key, nonce, url, "{}", kid)
+    header, body = http_requests.post_data(url, signed_payload)
+    print(header)
+    print(body)
+
+
+def check_challenge_validation_request(urls, url, key, kid):
+    nonce = get_nonce(urls)
+    signed_payload = sign_jws_rsa(key, nonce, url, "{}", kid)
+    header, body = http_requests.post_data(url, signed_payload)
+    print(header)
+    print(body)

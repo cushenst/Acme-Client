@@ -1,11 +1,14 @@
 from flask import Flask, request
+import sys
 
 app_challenge = Flask(__name__)
 
 
 @app_challenge.route("/.well-known/acme-challenge/<token>")
 def http_challenge(token):
-    return str(token)
+    print(sys.argv)
+    if token == sys.argv[1]:
+        return str(token)
 
 
 def shutdown_server():
@@ -22,4 +25,4 @@ def shutdown():
 
 
 if __name__ == '__main__':
-    app_challenge.run(port=5002)
+    app_challenge.run(port=5002, host="0.0.0.0")
