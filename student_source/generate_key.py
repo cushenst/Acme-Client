@@ -1,14 +1,15 @@
 import base64
-import os
 import json
+import time
 
 from cryptography import x509
-from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.backends.openssl import backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa, ec, padding, utils
 from cryptography.x509.oid import NameOID
+
+import student_source.generate_jtw as jwt
 
 
 def generate_csr():
@@ -48,26 +49,10 @@ def gen_key_ecc():
     return pointx, pointy, private_key, public_key, public_key1
 
 
-def sign_jws_rsa(nonce, base_url, payload):
-    key, _, _ = gen_key_rsa()
-    jws_data = {
-        "alg": "RS256",
-        "jwk": {
-            "kty": "RSA",
-            "kid": "test",
-            "alg": "RS256",
-            "n": base64.urlsafe_b64encode(key.public_key().public_numbers().n.to_bytes(length=256, byteorder="big")).decode("ascii").replace("=", ""),
-            "e": base64.urlsafe_b64encode(key.public_key().public_numbers().e.to_bytes(length=3, byteorder="big")).decode().replace("=", "")
-
-        },
-        "nonce": f"{nonce}",
-        "url": f"{base_url}sign-me-up"
-
-    }
-    payload_data = payload
+def sign_jws_rsa(key, nonce, url, payload, kid=0):
+    jws_data = jwt.gen_jwk(key, kid, nonce, url)
 
     protected = json.dumps(jws_data)
-    #payload = json.dumps(payload_data)
     protected64 = base64.urlsafe_b64encode(protected.encode("utf-8")).decode("ascii").replace("=", "")
     payload64 = base64.urlsafe_b64encode(payload.encode("utf-8")).decode("ascii").replace("=", "")
     data64 = f"{protected64}.{payload64}"
@@ -91,8 +76,10 @@ def sign_jws(nonce, base_url, payload_data):
             "kty": "EC",
             "crv": "P-256",
             "kid": "test",
-            "x": base64.urlsafe_b64encode(public_ec_key.public_numbers().x.to_bytes(length=32, byteorder="big")).decode().replace("=", ""),
-            "y": base64.urlsafe_b64encode(public_ec_key.public_numbers().y.to_bytes(length=32, byteorder="big")).decode().replace("=", "")
+            "x": base64.urlsafe_b64encode(
+                public_ec_key.public_numbers().x.to_bytes(length=32, byteorder="big")).decode().replace("=", ""),
+            "y": base64.urlsafe_b64encode(
+                public_ec_key.public_numbers().y.to_bytes(length=32, byteorder="big")).decode().replace("=", "")
 
         },
         "nonce": f"{nonce}",

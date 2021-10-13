@@ -1,29 +1,24 @@
 import subprocess
 
-import requests
+import student_source.functions as functions
+from student_source.generate_key import generate_csr, gen_key_rsa
 
-from student_source.generate_key import generate_csr, sign_jws, sign_jws_rsa
-import student_source.make_requests as http_request
-from student_source.generate_jtw import sign_jwt
+key, _, _ = gen_key_rsa()
 
-base_url = "https://localhost:14000/"
+urls = functions.get_urls()
+#nonce = functions.get_nonce(urls)
 
-urls = http_request.get_urls(base_url)
-nonce = http_request.get_nonce(urls)
-
-
-signed_request_data = sign_jws_rsa(nonce, base_url, '{"termsOfServiceAgreed": true}', kid)
-
-a = http_request.create_account(urls, signed_request_data)
-print(a)
-print(a.content.decode())
+account_data = functions.create_account(key, urls)
+kid = account_data["kid"]
 
 
+domains = ["www.eth.ch", "eth.ch"]
+ch_type = "dns"
 
-generate_csr()
+functions.create_order(ch_type, domains, kid, urls, key)
+functions.list_orders(key, kid, account_data["orders"])
 
+#generate_csr()
 
-a_child_process = subprocess.Popen(args=["python3", "./student_source/http_challenge.py"], stdout=subprocess.DEVNULL,
-                                   stderr=subprocess.DEVNULL)
-
-
+#a_child_process = subprocess.Popen(args=["python3", "./student_source/http_challenge.py"], stdout=subprocess.DEVNULL,
+#                                   stderr=subprocess.DEVNULL)
