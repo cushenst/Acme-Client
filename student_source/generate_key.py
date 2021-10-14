@@ -12,9 +12,10 @@ from cryptography.x509.oid import NameOID
 import student_source.generate_jtw as jwt
 
 
-def generate_csr():
+def generate_csr(domains):
     key = write_key_rsa()
-    write_csr(key)
+    csr = write_csr(key, domains)
+    return csr
 
 
 def gen_key_rsa():
@@ -133,20 +134,21 @@ def write_key_rsa():
     return key
 
 
-def gen_crt(key):
-    print(key.public_key())
+def save_cert(cert):
+    with open("./student_source/certs/fullchain.pem", "wb") as f:
+        f.write(cert)
 
-
-def write_csr(key):
+def write_csr(key, domains):
+    dns_name = []
+    for domain in domains:
+        dns_name.append(x509.DNSName(domain))
     csr = x509.CertificateSigningRequestBuilder().subject_name(x509.Name([
         x509.NameAttribute(NameOID.COUNTRY_NAME, u"CH"),
         x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, u"Zürich"),
         x509.NameAttribute(NameOID.ORGANIZATION_NAME, u"ETH NetSec"),
-        x509.NameAttribute(NameOID.COMMON_NAME, u"eth.ch"),
+        x509.NameAttribute(NameOID.COMMON_NAME, domains[0]),
     ])).add_extension(
-        x509.SubjectAlternativeName([
-            x509.DNSName(u"eth.ch"),
-        ]),
+        x509.SubjectAlternativeName(dns_name),
         critical=False,
     )
 
@@ -155,3 +157,21 @@ def write_csr(key):
     # Write our CSR out to disk.
     with open("./student_source/certs/csr.pem", "wb") as f:
         f.write(signed_csr.public_bytes(serialization.Encoding.PEM))
+
+    return signed_csr.public_bytes(serialization.Encoding.DER)
+
+
+def gen_thumbprint(key):
+    digest = hashes.Hash(hashes.SHA256())
+
+    thumbprint_data = {
+        "e": base64.urlsafe_b64encode(key.public_key().public_numbers().e.to_bytes(length=3, byteorder="big")).decode(
+            "ascii").replace("=", ""),
+        "kty": "RSA",
+        "n": base64.urlsafe_b64encode(key.public_key().public_numbers().n.to_bytes(length=256, byteorder="big")).decode(
+            "ascii").replace("=", "")
+    }
+    clean_thumbprint_data = json.dumps(thumbprint_data).replace(" ", "")
+    digest.update(clean_thumbprint_data.encode("ascii"))
+    thumbprint = digest.finalize()
+    return base64.urlsafe_b64encode(thumbprint).decode("ascii").replace("=", "")

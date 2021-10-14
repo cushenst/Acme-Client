@@ -7,8 +7,7 @@ app_challenge = Flask(__name__)
 @app_challenge.route("/.well-known/acme-challenge/<token>")
 def http_challenge(token):
     print(sys.argv)
-    if token == sys.argv[1]:
-        return str(token)
+    return sys.argv[1]
 
 
 def shutdown_server():

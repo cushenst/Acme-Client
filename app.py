@@ -24,25 +24,41 @@ order = functions.create_order(domains, kid, urls, key)
 authorizations = order["authorizations"]
 finalize_url = order["finalize"]
 
-challenge_to_validate = functions.get_challenges(authorizations[0], urls, kid, key, ch_type)
-print(challenge_to_validate)
-if ch_type == "http":
-    if challenge_to_validate["status"] == "pending":
-        print("Flask Should Launch")
-        http_server_process = subprocess.Popen(
-            args=["python3", "./student_source/http_challenge.py", challenge_to_validate["token"],
-                  challenge_to_validate["domain"]], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        dns.dns_server("192.168.0.15")
-        time.sleep(3)
-        functions.send_challenge_validation_request(urls, challenge_to_validate["url"], key, kid)
-        while True:
-            time.sleep(2)
-            challenge_to_check = functions.get_challenges(authorizations[0], urls, kid, key, ch_type)
-            print(challenge_to_check)
-            if challenge_to_check['status'] == "invalid":
-                print("here1")
-                http_server_process.kill()
-                print(http_server_process.stdout.readlines())
-                print(http_server_process.stderr.readlines())
-                print("here")
-                break
+for authorization in authorizations:
+    challenge_to_validate = functions.get_challenges(authorization, urls, kid, key, ch_type)
+    challenge_key = functions.gen_challenge(key, challenge_to_validate["token"])
+    if ch_type == "http":
+        if challenge_to_validate["status"] == "pending":
+            print("Flask Should Launch")
+            http_server_process = subprocess.Popen(
+                args=["python3", "./student_source/http_challenge.py", challenge_key,
+                      challenge_to_validate["domain"]], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            dns_control = dns.dns_server(constants.local_ip)
+            time.sleep(1)
+            functions.send_challenge_validation_request(urls, challenge_to_validate["url"], key, kid)
+            for i in range(5):
+                time.sleep(1)
+                challenge_to_check = functions.get_challenges(authorization, urls, kid, key, ch_type)
+                if challenge_to_check['status'] != "pending":
+                    print("challenge succeeded")
+                    http_server_process.kill()
+                    dns_control.stop()
+                    dns_control.server.server_close()
+                    break
+
+order_status = functions.check_order(urls, account_data["orders"], kid, key)
+if order_status["status"] == "ready":
+    finalize_order_status = functions.finalize_order(urls, order_status["finalize"], kid, key, domains)
+    for i in range(5):
+        order_status = functions.check_order(urls, account_data["orders"], kid, key)
+        time.sleep(1)
+        print(order_status)
+        if order_status["status"] == "valid":
+            print("Cert Ready")
+            cert_status = functions.check_order(urls, account_data["orders"], kid, key)
+            certificate = functions.download_cert(urls, cert_status["certificate"], kid, key)
+            break
+
+else:
+    print("Challenge Invalid, \n Quitting...")
+

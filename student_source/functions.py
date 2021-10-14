@@ -1,8 +1,9 @@
+import base64
 import json
 
 import student_source.constants as constants
 import student_source.make_requests as http_requests
-from student_source.generate_key import sign_jws_rsa
+from student_source.generate_key import sign_jws_rsa, gen_thumbprint, generate_csr, save_cert
 
 
 def create_account(key, urls):
@@ -37,8 +38,7 @@ def list_orders(key, kid, orders_url):
     nonce = get_nonce(get_urls())
     list_orders_payload = sign_jws_rsa(key, nonce, orders_url, '', kid)
     list_orders_response_header, list_orders_response_body = http_requests.post_data(orders_url, list_orders_payload)
-    print(list_orders_response_header)
-    print(list_orders_response_body)
+    return json.loads(list_orders_response_body)
 
 
 def create_order(domains, auth, urls, key):
@@ -72,20 +72,52 @@ def get_challenges(auth_url, urls, kid, key, challenge_type):
 def check_http_server(url, token):
     response = http_requests.get_http(url)
     decoded_body = response.content.decode()
-    print(decoded_body)
 
 
 def send_challenge_validation_request(urls, url, key, kid):
     nonce = get_nonce(urls)
     signed_payload = sign_jws_rsa(key, nonce, url, "{}", kid)
     header, body = http_requests.post_data(url, signed_payload)
-    print(header)
-    print(body)
 
 
 def check_challenge_validation_request(urls, url, key, kid):
     nonce = get_nonce(urls)
     signed_payload = sign_jws_rsa(key, nonce, url, "{}", kid)
     header, body = http_requests.post_data(url, signed_payload)
-    print(header)
-    print(body)
+
+
+def gen_challenge(key, token):
+    thumbprint = gen_thumbprint(key)
+    return f"{token}.{thumbprint}"
+
+
+def check_order(urls, url, kid, key):
+    nonce = get_nonce(urls)
+    orders = list_orders(key, kid, url)
+    if len(orders["orders"]) > 0:
+        post_as_get = sign_jws_rsa(key, nonce, orders["orders"][0], "", kid)
+        header, order_details = http_requests.post_data(orders["orders"][0], post_as_get)
+        order_details = json.loads(order_details)
+        return order_details#{"status": order_details["status"], "finalize": order_details["finalize"]}
+    else:
+        return {"status": "invalid"}
+
+
+def finalize_order(urls, url, kid, key, domains):
+    nonce = get_nonce(urls)
+    csr = generate_csr(domains)
+    payload = {
+        "csr": base64.urlsafe_b64encode(csr).decode().replace("=", "")
+    }
+    payload = json.dumps(payload)
+    signed_csr_payload = sign_jws_rsa(key, nonce, url, payload, kid)
+    header, order_details = http_requests.post_data(url, signed_csr_payload)
+    return json.loads(order_details)
+
+
+def download_cert(urls, url, kid, key):
+    nonce = get_nonce(urls)
+    signed_download_cert_payload = sign_jws_rsa(key, nonce, url, "", kid)
+    header, cert_details = http_requests.post_data(url, signed_download_cert_payload)
+    save_cert(cert_details.encode())
+    return cert_details
