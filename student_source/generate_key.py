@@ -138,10 +138,12 @@ def save_cert(cert):
     with open("./student_source/certs/fullchain.pem", "wb") as f:
         f.write(cert)
 
+
 def write_csr(key, domains):
     dns_name = []
     for domain in domains:
         dns_name.append(x509.DNSName(domain))
+    print(domains)
     csr = x509.CertificateSigningRequestBuilder().subject_name(x509.Name([
         x509.NameAttribute(NameOID.COUNTRY_NAME, u"CH"),
         x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, u"Zürich"),

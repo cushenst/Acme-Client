@@ -19,8 +19,7 @@ def create_account(key, urls):
     return response_data
 
 
-def get_urls():
-    url = constants.base_url + "/dir"
+def get_urls(url):
     request_response = http_requests.get_urls(url)
     urls = request_response.content.decode()
     urls = json.loads(urls)
@@ -34,8 +33,8 @@ def get_nonce(urls):
     return nonce
 
 
-def list_orders(key, kid, orders_url):
-    nonce = get_nonce(get_urls())
+def list_orders(key, kid, orders_url, urls):
+    nonce = get_nonce(urls)
     list_orders_payload = sign_jws_rsa(key, nonce, orders_url, '', kid)
     list_orders_response_header, list_orders_response_body = http_requests.post_data(orders_url, list_orders_payload)
     return json.loads(list_orders_response_body)
@@ -93,7 +92,7 @@ def gen_challenge(key, token):
 
 def check_order(urls, url, kid, key):
     nonce = get_nonce(urls)
-    orders = list_orders(key, kid, url)
+    orders = list_orders(key, kid, url, urls)
     if len(orders["orders"]) > 0:
         post_as_get = sign_jws_rsa(key, nonce, orders["orders"][0], "", kid)
         header, order_details = http_requests.post_data(orders["orders"][0], post_as_get)

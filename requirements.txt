@@ -1,4 +1,5 @@
-Flask~=2.0.1
+Flask~=2.0.2
 cryptography~=35.0.0
 requests~=2.26.0
 dnslib~=0.9.16
+click~=8.0.3
