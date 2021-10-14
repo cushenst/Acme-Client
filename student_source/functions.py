@@ -3,7 +3,7 @@ import json
 
 import student_source.constants as constants
 import student_source.make_requests as http_requests
-from student_source.generate_key import sign_jws_rsa, gen_thumbprint, generate_csr, save_cert
+from student_source.generate_key import sign_jws_rsa, gen_thumbprint, generate_csr, save_cert, gen_dns_hash
 
 
 def create_account(key, urls):
@@ -98,7 +98,7 @@ def check_order(urls, url, kid, key):
         post_as_get = sign_jws_rsa(key, nonce, orders["orders"][0], "", kid)
         header, order_details = http_requests.post_data(orders["orders"][0], post_as_get)
         order_details = json.loads(order_details)
-        return order_details#{"status": order_details["status"], "finalize": order_details["finalize"]}
+        return order_details
     else:
         return {"status": "invalid"}
 
@@ -121,3 +121,10 @@ def download_cert(urls, url, kid, key):
     header, cert_details = http_requests.post_data(url, signed_download_cert_payload)
     save_cert(cert_details.encode())
     return cert_details
+
+
+def gen_challenge_dns(key, token):
+    http_challenge = gen_challenge(key, token)
+    dns_challenge = gen_dns_hash(http_challenge)
+    print(dns_challenge)
+    return dns_challenge

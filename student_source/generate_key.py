@@ -175,3 +175,10 @@ def gen_thumbprint(key):
     digest.update(clean_thumbprint_data.encode("ascii"))
     thumbprint = digest.finalize()
     return base64.urlsafe_b64encode(thumbprint).decode("ascii").replace("=", "")
+
+
+def gen_dns_hash(key_authorization):
+    digest = hashes.Hash(hashes.SHA256())
+    digest.update(key_authorization.encode("ascii"))
+    key_hash = digest.finalize()
+    return base64.urlsafe_b64encode(key_hash).decode("ascii").replace("=", "")

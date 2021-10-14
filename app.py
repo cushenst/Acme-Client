@@ -18,7 +18,12 @@ account_data = functions.create_account(key, urls)
 kid = account_data["kid"]
 
 domains = ["www.eth.ch", "eth.ch"]
-ch_type = "http"
+ch_type = "dns"
+
+for domain in domains:
+    if "*" in domain:
+        ch_type = "dns"
+
 
 order = functions.create_order(domains, kid, urls, key)
 authorizations = order["authorizations"]
@@ -26,8 +31,8 @@ finalize_url = order["finalize"]
 
 for authorization in authorizations:
     challenge_to_validate = functions.get_challenges(authorization, urls, kid, key, ch_type)
-    challenge_key = functions.gen_challenge(key, challenge_to_validate["token"])
     if ch_type == "http":
+        challenge_key = functions.gen_challenge(key, challenge_to_validate["token"])
         if challenge_to_validate["status"] == "pending":
             print("Flask Should Launch")
             http_server_process = subprocess.Popen(
@@ -45,7 +50,20 @@ for authorization in authorizations:
                     dns_control.stop()
                     dns_control.server.server_close()
                     break
-
+    else:
+        if challenge_to_validate["status"] == "pending":
+            challenge_key = functions.gen_challenge_dns(key, challenge_to_validate["token"])
+            dns_control = dns.dns_server_dns_challenge(challenge_key)
+            time.sleep(1)
+            functions.send_challenge_validation_request(urls, challenge_to_validate["url"], key, kid)
+            for i in range(5):
+                time.sleep(1)
+                challenge_to_check = functions.get_challenges(authorization, urls, kid, key, ch_type)
+                if challenge_to_check['status'] != "pending":
+                    print("challenge succeeded")
+                    dns_control.stop()
+                    dns_control.server.server_close()
+                    break
 order_status = functions.check_order(urls, account_data["orders"], kid, key)
 if order_status["status"] == "ready":
     finalize_order_status = functions.finalize_order(urls, order_status["finalize"], kid, key, domains)
