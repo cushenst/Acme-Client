@@ -5,4 +5,4 @@ cd  "$DIRECTORY" || exit 1
 
 echo "Run your project here."
 
-python3 app.py
+python3 ../student_source/app.py
