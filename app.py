@@ -16,12 +16,11 @@ import click
 @click.option('--domain', required=True, help='Domains to issue cert with', multiple=True)
 @click.option('--record', required=True, help='DNS response record of acme server')
 @click.option('--dir', required=True, help='DIR of Acme server')
-@click.option('--revoke', required=False, help='Revoke cert after issue')
+@click.option('--revoke', required=False, help='Revoke cert after issue', is_flag=True)
 def startup(domain, dir, record, revoke, challenge):
     domains = []
     for i in domain:
         domains.append(i)
-    print(domains)
     #return domains, dir, record, revoke, challenge
     main(domains, dir, record, revoke, challenge)
 
@@ -32,7 +31,6 @@ def main(domains, dir_url, record, revoke, challenge):
     if "http" in challenge:
         ch_type = "http"
 
-    print("here")
 
     key, _, _ = gen_key_rsa()
     urls = functions.get_urls(dir_url)
@@ -95,12 +93,16 @@ def main(domains, dir_url, record, revoke, challenge):
                 cert_status = functions.check_order(urls, account_data["orders"], kid, key)
                 certificate = functions.download_cert(urls, cert_status["certificate"], kid, key)
                 break
+        if order_status["status"] != "valid":
+            print("Challenge Invalid, \n Quitting...")
+            sys.exit()
 
     else:
         print("Challenge Invalid, \n Quitting...")
         sys.exit()
 
-
+    if revoke:
+        functions.revoke_cert(urls, certificate, kid, key)
 
     https_server_cert = subprocess.Popen(
         args=["python3", f"{ASSETS_DIR}/student_source/https_cert.py"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)

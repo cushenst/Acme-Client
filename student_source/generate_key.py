@@ -189,3 +189,23 @@ def gen_dns_hash(key_authorization):
     digest.update(key_authorization.encode("ascii"))
     key_hash = digest.finalize()
     return base64.urlsafe_b64encode(key_hash).decode("ascii").replace("=", "")
+
+
+def pem_to_der(cert):
+    fullchain = cert.split("\n")
+    for line_num in range(1, len(fullchain)):
+        if fullchain[line_num] == "-----BEGIN CERTIFICATE-----":
+            end_of_cert = line_num
+    pem_cert = fullchain[0:end_of_cert]
+    print(pem_cert)
+    cert = ""
+    for i in pem_cert:
+        cert += (i + "\n")
+    print(cert)
+    cert = cert[0:-1]
+    pemcert = x509.load_pem_x509_certificate(
+        cert.encode()
+    )
+    derkey = pemcert.public_bytes(serialization.Encoding.DER)
+    derkey_b64 = base64.urlsafe_b64encode(derkey).decode().replace("=", "")
+    return derkey_b64

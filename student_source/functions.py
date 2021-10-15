@@ -3,7 +3,7 @@ import json
 
 import student_source.constants as constants
 import student_source.make_requests as http_requests
-from student_source.generate_key import sign_jws_rsa, gen_thumbprint, generate_csr, save_cert, gen_dns_hash
+from student_source.generate_key import sign_jws_rsa, gen_thumbprint, generate_csr, save_cert, gen_dns_hash, pem_to_der
 
 
 def create_account(key, urls):
@@ -127,3 +127,14 @@ def gen_challenge_dns(key, token):
     dns_challenge = gen_dns_hash(http_challenge)
     print(dns_challenge)
     return dns_challenge
+
+
+def revoke_cert(urls, cert, kid, key):
+    nonce = get_nonce(urls)
+    url = urls["revokeCert"]
+
+    payload = {
+        "certificate": pem_to_der(cert)
+    }
+    signed_revoke_cert_payload = sign_jws_rsa(key, nonce, url, json.dumps(payload), kid)
+    header, cert_details = http_requests.post_data(url, signed_revoke_cert_payload)
