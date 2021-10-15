@@ -112,6 +112,7 @@ def main(domains, dir_url, record, revoke, challenge):
 
     print("Servers Ready...")
     http_shutdown_server.wait()
+    https_server_cert.terminate()
     print("Shutdown signal received. \n Quitting...")
 
 startup()

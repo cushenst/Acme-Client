@@ -141,7 +141,10 @@ def write_key_rsa(domain):
 
 def save_cert(cert, domain):
     ASSETS_DIR = os.path.dirname(os.path.abspath(__file__))
+    with open(f"{ASSETS_DIR}/../project/pebble.minica.pem") as f:
+        root_ca = f.read()
     with open(f"{ASSETS_DIR}/certs/{domain}/fullchain.pem", "wb") as f:
+        f.write(root_ca.encode("ascii"))
         f.write(cert)
 
 
