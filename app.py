@@ -104,6 +104,7 @@ def main(domains, dir_url, record, revoke, challenge):
     if revoke:
         functions.revoke_cert(urls, certificate, kid, key)
 
+    dns_control = dns.dns_server(record)
     https_server_cert = subprocess.Popen(
         args=["python3", f"{ASSETS_DIR}/student_source/https_cert.py", domains[0]], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
@@ -115,6 +116,8 @@ def main(domains, dir_url, record, revoke, challenge):
     print(http_shutdown_server.stdout.read())
     print(http_shutdown_server.stderr.read())
     https_server_cert.terminate()
+    dns_control.stop()
+    dns_control.server.server_close()
     print(https_server_cert.stdout.read())
     print(https_server_cert.stderr.read())
     print("Shutdown signal received. \n Quitting...")
