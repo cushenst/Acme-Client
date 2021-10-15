@@ -5,5 +5,5 @@ cd  "$DIRECTORY" || exit 1
 
 echo "Run your project here."
 
-export PYTHONWARNINGS="ignore:Unverified HTTPS request"
+export REQUESTS_CA_BUNDLE=./pebble.minica.pem
 python3 ../app.py $@
