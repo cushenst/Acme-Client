@@ -1,6 +1,7 @@
 import subprocess
 import sys
 import time
+import os
 
 import student_source.constants as constants
 import student_source.dns as dns
@@ -22,10 +23,13 @@ def startup(domain, dir, record, revoke, challenge):
         domains.append(i)
     print(domains)
     #return domains, dir, record, revoke, challenge
-    dir_url = dir
+    main(domains, dir, record, revoke, challenge)
+
+
+def main(domains, dir_url, record, revoke, challenge):
     if "dns" in challenge:
         ch_type = "dns"
-    if "hhtp" in challenge:
+    if "http" in challenge:
         ch_type = "http"
 
     print("here")
@@ -95,12 +99,16 @@ def startup(domain, dir, record, revoke, challenge):
         print("Challenge Invalid, \n Quitting...")
         sys.exit()
 
+    ASSETS_DIR = os.path.dirname(os.path.abspath(__file__))
+
     https_server_cert = subprocess.Popen(
-        args=["python3", "./student_source/https_cert.py"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        args=["python3", f"{ASSETS_DIR}/student_source/https_cert.py"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     http_shutdown_server = subprocess.Popen(
-        args=["python3", "./student_source/shutdown.py"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        args=["python3", f"{ASSETS_DIR}/student_source/shutdown.py"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
+    print("Servers Ready...")
     http_shutdown_server.wait()
+    print("Shutdown signal received. \n Quitting...")
 
 startup()

@@ -128,7 +128,7 @@ def write_key_rsa():
     key, _, _ = gen_key_rsa()
     ASSETS_DIR = os.path.dirname(os.path.abspath(__file__))
     print(ASSETS_DIR)
-    with open("./certs/key.pem", "wb") as f:
+    with open(f"{ASSETS_DIR}/certs/key.pem", "wb") as f:
         f.write(key.private_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PrivateFormat.TraditionalOpenSSL,
@@ -138,7 +138,8 @@ def write_key_rsa():
 
 
 def save_cert(cert):
-    with open("./certs/fullchain.pem", "wb") as f:
+    ASSETS_DIR = os.path.dirname(os.path.abspath(__file__))
+    with open(f"{ASSETS_DIR}/certs/fullchain.pem", "wb") as f:
         f.write(cert)
 
 
@@ -160,7 +161,8 @@ def write_csr(key, domains):
     signed_csr = csr.sign(key, hashes.SHA256())
 
     # Write our CSR out to disk.
-    with open("./certs/csr.pem", "wb") as f:
+    ASSETS_DIR = os.path.dirname(os.path.abspath(__file__))
+    with open(f"{ASSETS_DIR}/certs/csr.pem", "wb") as f:
         f.write(signed_csr.public_bytes(serialization.Encoding.PEM))
 
     return signed_csr.public_bytes(serialization.Encoding.DER)
