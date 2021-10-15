@@ -10,7 +10,9 @@ DOMAIN = sys.argv[1]
 
 @app_https.route("/")
 def http_challenge():
-    return "Hello World!"
+        with open(f"{ASSETS_DIR}/certs/{DOMAIN}/fullchain.pem") as f:
+            fullchain = f.read()
+        return fullchain
 
 
 if __name__ == '__main__':
