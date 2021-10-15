@@ -47,6 +47,7 @@ def main(domains, dir_url, record, revoke, challenge):
     order = functions.create_order(domains, kid, urls, key)
     authorizations = order["authorizations"]
     finalize_url = order["finalize"]
+    ASSETS_DIR = os.path.dirname(os.path.abspath(__file__))
 
     for authorization in authorizations:
         challenge_to_validate = functions.get_challenges(authorization, urls, kid, key, ch_type)
@@ -55,7 +56,7 @@ def main(domains, dir_url, record, revoke, challenge):
             if challenge_to_validate["status"] == "pending":
                 print("Flask Should Launch")
                 http_server_process = subprocess.Popen(
-                    args=["python3", "./student_source/http_challenge.py", challenge_key,
+                    args=["python3", f"{ASSETS_DIR}/student_source/http_challenge.py", challenge_key,
                           challenge_to_validate["domain"]], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 dns_control = dns.dns_server(record)
                 time.sleep(1)
@@ -99,7 +100,7 @@ def main(domains, dir_url, record, revoke, challenge):
         print("Challenge Invalid, \n Quitting...")
         sys.exit()
 
-    ASSETS_DIR = os.path.dirname(os.path.abspath(__file__))
+
 
     https_server_cert = subprocess.Popen(
         args=["python3", f"{ASSETS_DIR}/student_source/https_cert.py"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
