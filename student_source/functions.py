@@ -114,11 +114,11 @@ def finalize_order(urls, url, kid, key, domains):
     return json.loads(order_details)
 
 
-def download_cert(urls, url, kid, key):
+def download_cert(urls, url, kid, key, domain):
     nonce = get_nonce(urls)
     signed_download_cert_payload = sign_jws_rsa(key, nonce, url, "", kid)
     header, cert_details = http_requests.post_data(url, signed_download_cert_payload)
-    save_cert(cert_details.encode())
+    save_cert(cert_details.encode(), domain)
     return cert_details
 
 

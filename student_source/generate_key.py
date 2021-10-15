@@ -3,6 +3,7 @@ import json
 import time
 import os
 
+from pathlib import Path
 from cryptography import x509
 from cryptography.hazmat.backends.openssl import backend
 from cryptography.hazmat.primitives import hashes
@@ -14,7 +15,7 @@ import student_source.generate_jtw as jwt
 
 
 def generate_csr(domains):
-    key = write_key_rsa()
+    key = write_key_rsa(domains[0])
     csr = write_csr(key, domains)
     return csr
 
@@ -124,11 +125,12 @@ def sign_jws(nonce, base_url, payload_data):
     #     print('Verification failed')
 
 
-def write_key_rsa():
+def write_key_rsa(domain):
     key, _, _ = gen_key_rsa()
     ASSETS_DIR = os.path.dirname(os.path.abspath(__file__))
     print(ASSETS_DIR)
-    with open(f"{ASSETS_DIR}/certs/key.pem", "wb") as f:
+    Path(f"{ASSETS_DIR}/certs/{domain}").mkdir(parents=True, exist_ok=True)
+    with open(f"{ASSETS_DIR}/certs/{domain}/key.pem", "wb") as f:
         f.write(key.private_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PrivateFormat.TraditionalOpenSSL,
@@ -137,9 +139,9 @@ def write_key_rsa():
     return key
 
 
-def save_cert(cert):
+def save_cert(cert, domain):
     ASSETS_DIR = os.path.dirname(os.path.abspath(__file__))
-    with open(f"{ASSETS_DIR}/certs/fullchain.pem", "wb") as f:
+    with open(f"{ASSETS_DIR}/certs/{domain}/fullchain.pem", "wb") as f:
         f.write(cert)
 
 
@@ -162,7 +164,7 @@ def write_csr(key, domains):
 
     # Write our CSR out to disk.
     ASSETS_DIR = os.path.dirname(os.path.abspath(__file__))
-    with open(f"{ASSETS_DIR}/certs/csr.pem", "wb") as f:
+    with open(f"{ASSETS_DIR}/certs/{domains[0]}/csr.pem", "wb") as f:
         f.write(signed_csr.public_bytes(serialization.Encoding.PEM))
 
     return signed_csr.public_bytes(serialization.Encoding.DER)

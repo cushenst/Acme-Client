@@ -91,7 +91,7 @@ def main(domains, dir_url, record, revoke, challenge):
             if order_status["status"] == "valid":
                 print("Cert Ready")
                 cert_status = functions.check_order(urls, account_data["orders"], kid, key)
-                certificate = functions.download_cert(urls, cert_status["certificate"], kid, key)
+                certificate = functions.download_cert(urls, cert_status["certificate"], kid, key, domains[0])
                 break
         if order_status["status"] != "valid":
             print("Challenge Invalid, \n Quitting...")
@@ -105,7 +105,7 @@ def main(domains, dir_url, record, revoke, challenge):
         functions.revoke_cert(urls, certificate, kid, key)
 
     https_server_cert = subprocess.Popen(
-        args=["python3", f"{ASSETS_DIR}/student_source/https_cert.py"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        args=["python3", f"{ASSETS_DIR}/student_source/https_cert.py", domains[0]], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     http_shutdown_server = subprocess.Popen(
         args=["python3", f"{ASSETS_DIR}/student_source/shutdown.py"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
