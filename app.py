@@ -115,6 +115,8 @@ def main(domains, dir_url, record, revoke, challenge):
     print(http_shutdown_server.stdout.read())
     print(http_shutdown_server.stderr.read())
     https_server_cert.terminate()
+    print(https_server_cert.stdout.read())
+    print(https_server_cert.stderr.read())
     print("Shutdown signal received. \n Quitting...")
 
 startup()
