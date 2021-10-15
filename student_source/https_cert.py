@@ -5,7 +5,7 @@ import os
 
 app_https = Flask(__name__)
 ASSETS_DIR = os.path.dirname(os.path.abspath(__file__))
-DOMAIN = sys.argv[2]
+DOMAIN = sys.argv[1]
 
 
 @app_https.route("/")
