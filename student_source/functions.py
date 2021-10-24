@@ -1,7 +1,6 @@
 import base64
 import json
 
-import student_source.constants as constants
 import student_source.make_requests as http_requests
 from student_source.generate_key import sign_jws_rsa, gen_thumbprint, generate_csr, save_cert, gen_dns_hash, pem_to_der
 

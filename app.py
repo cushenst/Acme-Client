@@ -1,14 +1,13 @@
+import os
 import subprocess
 import sys
 import time
-import os
 
-import student_source.constants as constants
+import click
+
 import student_source.dns as dns
 import student_source.functions as functions
 from student_source.generate_key import gen_key_rsa
-
-import click
 
 
 @click.command()
@@ -21,7 +20,7 @@ def startup(domain, dir, record, revoke, challenge):
     domains = []
     for i in domain:
         domains.append(i)
-    #return domains, dir, record, revoke, challenge
+    # return domains, dir, record, revoke, challenge
     main(domains, dir, record, revoke, challenge)
 
 
@@ -30,7 +29,6 @@ def main(domains, dir_url, record, revoke, challenge):
         ch_type = "dns"
     if "http" in challenge:
         ch_type = "http"
-
 
     key, _, _ = gen_key_rsa()
     urls = functions.get_urls(dir_url)
@@ -106,7 +104,8 @@ def main(domains, dir_url, record, revoke, challenge):
 
     dns_control = dns.dns_server(record)
     https_server_cert = subprocess.Popen(
-        args=["python3", f"{ASSETS_DIR}/student_source/https_cert.py", domains[0]], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        args=["python3", f"{ASSETS_DIR}/student_source/https_cert.py", domains[0]], stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE)
 
     http_shutdown_server = subprocess.Popen(
         args=["python3", f"{ASSETS_DIR}/student_source/shutdown.py"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -121,5 +120,6 @@ def main(domains, dir_url, record, revoke, challenge):
     print(https_server_cert.stdout.read())
     print(https_server_cert.stderr.read())
     print("Shutdown signal received. \n Quitting...")
+
 
 startup()

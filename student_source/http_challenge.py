@@ -1,5 +1,6 @@
-from flask import Flask, request
 import sys
+
+from flask import Flask, request
 
 app_challenge = Flask(__name__)
 

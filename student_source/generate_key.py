@@ -1,9 +1,8 @@
 import base64
 import json
-import time
 import os
-
 from pathlib import Path
+
 from cryptography import x509
 from cryptography.hazmat.backends.openssl import backend
 from cryptography.hazmat.primitives import hashes

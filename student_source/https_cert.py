@@ -1,7 +1,7 @@
+import os
 import sys
 
-from flask import Flask, request
-import os
+from flask import Flask
 
 app_https = Flask(__name__)
 ASSETS_DIR = os.path.dirname(os.path.abspath(__file__))

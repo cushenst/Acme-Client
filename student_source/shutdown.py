@@ -1,5 +1,4 @@
 from flask import Flask, request
-import sys
 
 app_challenge = Flask(__name__)
 
@@ -14,7 +13,6 @@ def shutdown_server():
 @app_challenge.route("/shutdown")
 def shutdown():
     shutdown_server()
-    #sys.exit()
     return 'Server shutting down...'
 
 

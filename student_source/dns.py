@@ -14,4 +14,3 @@ def dns_server_dns_challenge(challenge):
     server = dnslib.server.DNSServer(resolver, port=10053, address="0.0.0.0")
     server.start_thread()
     return server
-
